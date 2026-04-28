@@ -11,6 +11,7 @@ import {
   ScatterChart, Scatter, ZAxis
 } from 'recharts';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
 
 export const ModelEvaluator: React.FC = () => {
@@ -36,7 +37,7 @@ export const ModelEvaluator: React.FC = () => {
     setIsLoading(true);
     setEvalError(null);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/model-evaluation`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/model-evaluation`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

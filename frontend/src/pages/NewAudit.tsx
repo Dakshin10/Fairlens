@@ -10,6 +10,7 @@ import { useAuditProgressStore } from '../store/auditProgressStore';
 import { auth } from '../firebase';
 import { useToast } from '../components/providers/ToastProvider';
 import { apiFetch, isRequestTimeout } from '../utils/apiFetch';
+import { apiUrl } from '../utils/apiBaseUrl';
 import { unwrapAuditBody } from '../utils/auditEnvelope';
 import { buildAuditSummary } from '../utils/auditSummary';
 import { AuditEmptyState } from '../components/ui/AuditEmptyState';
@@ -280,7 +281,7 @@ export default function NewAudit() {
   }, [currentStep, columns, setProtectedAttributes]);
 
   const handleFile = async (file: File) => {
-    if (!file.name.endsWith('.csv')) {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
       addToast("Please upload a CSV file.", 'error');
       return;
     }
@@ -294,9 +295,10 @@ export default function NewAudit() {
     formData.append('file', file);
 
     try {
-      const res = await apiFetch('http://localhost:8000/audits/upload', {
+      const res = await apiFetch(apiUrl('/audits/upload'), {
         method: 'POST',
         body: formData,
+        timeoutMs: 120_000,
       });
       console.log('Upload response', res);
       if (!res.ok) {
@@ -309,7 +311,7 @@ export default function NewAudit() {
         job_id?: string;
         file_url?: string | null;
       }>(await res.json());
-      if (data.columns) {
+      if (data.columns && data.columns.length > 0) {
         setColumns(data.columns);
         setColumnTypes(data.column_types ?? {});
         setPreview(data.preview ?? []);
@@ -366,7 +368,7 @@ export default function NewAudit() {
 
     setIsConfigSaving(true);
     try {
-      const configRes = await apiFetch('http://localhost:8000/audits/config', {
+      const configRes = await apiFetch(apiUrl('/audits/config'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -399,7 +401,7 @@ export default function NewAudit() {
     activeProtectedAttributes: string[],
   ) => {
     const [proxyRes, copilotRes] = await Promise.allSettled([
-      apiFetch(`http://localhost:8000/audits/${activeJobId}/proxy-risks`, {
+      apiFetch(apiUrl(`/audits/${activeJobId}/proxy-risks`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -407,7 +409,7 @@ export default function NewAudit() {
           target_column: activeTarget,
         }),
       }),
-      apiFetch(`http://localhost:8000/audits/${activeJobId}/copilot`, {
+      apiFetch(apiUrl(`/audits/${activeJobId}/copilot`), {
         method: 'POST',
       }),
     ]);
@@ -455,7 +457,7 @@ export default function NewAudit() {
       });
       setAuditSummary(null);
 
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/run`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/run`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -674,7 +676,7 @@ export default function NewAudit() {
             type="file" 
             ref={fileInputRef} 
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} 
-            accept=".csv" 
+            accept=".csv,text/csv" 
             className="hidden" 
           />
           <div className="w-24 h-24 rounded-full bg-dark-800 flex items-center justify-center mx-auto mb-8 shadow-inner border border-slate-700">

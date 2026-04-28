@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { EnhancedColumnSelector } from './EnhancedColumnSelector';
 import { apiFetch } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
 
 const ACCEPTED = ['.pkl', '.joblib'];
@@ -43,7 +44,7 @@ export default function ModelUploader() {
       if (featureCols.length > 0) {
         fd.append('feature_columns', featureCols.join(','));
       }
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/upload-model`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/upload-model`), {
         method: 'POST',
         body: fd,
       });
@@ -51,7 +52,7 @@ export default function ModelUploader() {
       if (!res.ok) throw new Error(data.detail || 'Upload failed');
       setResult(data);
       // Re-fetch audit results since model predictions were injected
-      const auditRes = await apiFetch(`http://localhost:8000/audits/${jobId}/run`, { method: 'GET' }).catch(() => null);
+      const auditRes = await apiFetch(apiUrl(`/audits/${jobId}/run`), { method: 'GET' }).catch(() => null);
       if (auditRes?.ok) {
         const auditData = await auditRes.json();
         if (auditData.disparities) setDisparities(auditData.disparities);

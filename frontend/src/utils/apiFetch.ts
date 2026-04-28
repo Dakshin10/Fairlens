@@ -1,7 +1,11 @@
 /**
  * Application-wide HTTP helper: {@link fetchWithTimeout} (15s) + optional timeout toast.
  */
-import { FETCH_WITH_TIMEOUT_MS, fetchWithTimeout } from './fetchWithTimeout';
+import {
+  FETCH_WITH_TIMEOUT_MS,
+  fetchWithTimeout,
+  type FetchWithTimeoutInit,
+} from './fetchWithTimeout';
 import type { ToastType } from '../components/ui/Toast';
 
 const TIMEOUT_MESSAGE = 'Server took too long. Try again.';
@@ -30,19 +34,34 @@ export function isRequestTimeout(err: unknown): boolean {
  * — on timeout, shows `"Server took too long. Try again."` via {@link registerGlobalApiToast}
  * — rethrows the error so callers can still branch on failures
  */
+function isBrowserNetworkError(err: unknown): boolean {
+  return (
+    err instanceof TypeError &&
+    typeof err.message === 'string' &&
+    err.message.toLowerCase().includes('fetch')
+  );
+}
+
 export async function apiFetch(
   input: RequestInfo | URL,
-  init?: RequestInit,
+  init?: FetchWithTimeoutInit,
 ): Promise<Response> {
   try {
     return await fetchWithTimeout(input, init);
-  } catch (err) {
+  } catch (err: unknown) {
     if (isRequestTimeout(err)) {
       toastSink?.(TIMEOUT_MESSAGE, 'error');
+      throw err;
+    }
+    if (isBrowserNetworkError(err)) {
+      throw new Error(
+        'Cannot reach the FairLens API. Start the backend (uvicorn on port 8000), run the Vite dev server so requests proxy to it, or set VITE_API_BASE_URL to your API URL.',
+        { cause: err },
+      );
     }
     throw err;
   }
 }
 
 /** Re-export for consumers that configure timeouts centrally */
-export { FETCH_WITH_TIMEOUT_MS, fetchWithTimeout };
+export { FETCH_WITH_TIMEOUT_MS, fetchWithTimeout, type FetchWithTimeoutInit };

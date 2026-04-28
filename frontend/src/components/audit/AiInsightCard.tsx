@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Sparkles, AlertCircle, HelpCircle, Activity, Lightbulb } from 'lucide-react';
 import { useAuditStore } from '../../store/auditStore';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
 
 export default function AiInsightCard() {
@@ -13,7 +14,7 @@ export default function AiInsightCard() {
     setExplainError(false);
     setIsExplaining(true);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/explain`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/explain`), {
         method: 'POST'
       });
       const data = await res.json();

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuditStore } from '../../store/auditStore';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { FETCH_WITH_TIMEOUT_MS } from '../../utils/fetchWithTimeout';
 import { unwrapAuditBody } from '../../utils/auditEnvelope';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
@@ -202,7 +203,7 @@ export default function AuditIntegrity() {
     setReport(null);
 
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/verify`);
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/verify`));
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       let data: VerifyResponse;
       try { data = unwrapAuditBody(await res.json()); } catch { throw new Error('Invalid JSON response'); }
@@ -235,7 +236,7 @@ export default function AuditIntegrity() {
     setTamperError(null);
     setTamperSuccessBanner(null);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/tamper`, { method: 'POST' });
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/tamper`), { method: 'POST' });
       if (!res.ok) throw new Error('Tamper simulation failed');
       setTamperSuccessBanner('Tampering complete. The local audit hash chain was modified for demonstration.');
       await runVerification();

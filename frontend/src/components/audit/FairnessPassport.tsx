@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuditStore } from '../../store/auditStore';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
 import { MetricStatus } from '../ui/MetricStatus';
 
@@ -465,7 +466,7 @@ export default function FairnessPassport() {
       setLoading(true);
       setError(null);
       try {
-        const res = await apiFetch(`http://localhost:8000/audits/${jobId}/passport`);
+        const res = await apiFetch(apiUrl(`/audits/${jobId}/passport`));
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
         let data: Passport;
         try { data = await res.json(); } catch { throw new Error('Invalid JSON from server'); }

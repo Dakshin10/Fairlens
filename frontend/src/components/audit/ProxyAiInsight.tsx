@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Sparkles, AlertTriangle, ShieldCheck, Zap, Info, ListTodo } from 'lucide-react';
 import { useAuditStore } from '../../store/auditStore';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
 
 export default function ProxyAiInsight() {
@@ -21,7 +22,7 @@ export default function ProxyAiInsight() {
     setExplainError(false);
     setIsExplainingProxy(true);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/proxy-explain`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/proxy-explain`), {
         method: 'POST'
       });
       const data = await res.json();

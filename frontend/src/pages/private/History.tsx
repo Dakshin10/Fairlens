@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Download, Filter, History as HistoryIcon, Play, RotateCcw } from 'lucide-react';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 
 type AuditHistoryItem = {
   job_id: string;
@@ -30,7 +31,7 @@ export default function History() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    apiFetch('http://localhost:8000/audits/recent')
+    apiFetch(apiUrl('/audits/recent'))
       .then((res) => res.ok ? res.json() : Promise.reject(new Error('Could not load audit history.')))
       .then((data) => setAudits(Array.isArray(data?.audits) ? data.audits : []))
       .catch((err) => {
@@ -55,7 +56,7 @@ export default function History() {
   }, [audits, dateFilter, riskFilter]);
 
   const downloadPassport = async (jobId: string) => {
-    const res = await apiFetch(`http://localhost:8000/audits/${jobId}/passport`);
+    const res = await apiFetch(apiUrl(`/audits/${jobId}/passport`));
     if (!res.ok) return;
     const json = await res.json();
     const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });

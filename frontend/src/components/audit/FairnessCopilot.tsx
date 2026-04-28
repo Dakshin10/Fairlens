@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuditStore } from '../../store/auditStore';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
 import { useToast } from '../providers/ToastProvider';
 
@@ -53,7 +54,7 @@ export default function FairnessCopilot() {
     }, 2000);
 
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/copilot`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/copilot`), {
         method: 'POST'
       });
       const data = await res.json();

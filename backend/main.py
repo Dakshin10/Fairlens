@@ -56,6 +56,7 @@ from model_ingestion import register_model_routes
 
 from datastore import FirestoreBackedDict
 from audit_envelope import audit_success
+from logger_db import log_event, verify_audit, tamper_audit_log, get_audit_replay, get_decision_history
 
 # Firestore-backed datastore — survives server restarts.
 # Falls back to memory-only if Firestore is unavailable.
@@ -167,14 +168,32 @@ async def get_recent_audits():
         logger.warning("GET /audits/recent failed: %s", exc)
         return {"audits": []}  # Graceful fallback — never 500
 
+def _decode_upload_bytes(contents: bytes) -> str:
+    """Decode uploaded CSV bytes (UTF-8 with BOM, UTF-16, or Latin-1 fallback)."""
+    if not contents:
+        raise ValueError("Empty file")
+    if contents.startswith(b"\xff\xfe"):
+        return contents.decode("utf-16-le")
+    if contents.startswith(b"\xfe\xff"):
+        return contents.decode("utf-16-be")
+    try:
+        return contents.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return contents.decode("latin-1")
+
+
 @app.post("/audits/upload")
 async def upload_dataset(file: UploadFile = File(...)):
-    if not file.filename.endswith('.csv'):
+    raw_name = file.filename or ""
+    if not raw_name.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are supported")
-    
+
     contents = await file.read()
     try:
-        df = pd.read_csv(io.StringIO(contents.decode("utf-8")))
+        text = _decode_upload_bytes(contents)
+        df = pd.read_csv(io.StringIO(text))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"CSV parse error: {e}")
 
@@ -540,7 +559,6 @@ async def get_audit_summary(job_id: str):
     
     return {"story": story}
 
-from logger_db import log_event, verify_audit, tamper_audit_log, get_audit_replay, get_decision_history
 from compliance_report import generate_compliance_report
 
 @app.get("/audits/{job_id}/compliance-report")

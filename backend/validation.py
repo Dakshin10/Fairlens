@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 MAX_ROWS = 200_000
 MAX_COLS = 500
-MIN_ROWS = 10
+# Allow small tutorial / smoke-test CSVs; config + run still require a valid target.
+MIN_ROWS = 2
 
 
 def validate_dataset(df: pd.DataFrame, filename: str) -> list[str]:

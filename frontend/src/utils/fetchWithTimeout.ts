@@ -1,6 +1,8 @@
 /** Default timeout (ms) for {@link fetchWithTimeout}. */
 export const FETCH_WITH_TIMEOUT_MS = 15_000;
 
+export type FetchWithTimeoutInit = RequestInit & { timeoutMs?: number };
+
 /**
  * `fetch` with an AbortController-driven timeout. Honors `init.signal` (caller abort)
  * in addition to the timeout. On timeout, throws an `Error` with a clear message;
@@ -8,9 +10,10 @@ export const FETCH_WITH_TIMEOUT_MS = 15_000;
  */
 export async function fetchWithTimeout(
   input: RequestInfo | URL,
-  init?: RequestInit
+  init?: FetchWithTimeoutInit
 ): Promise<Response> {
-  const timeoutMs = FETCH_WITH_TIMEOUT_MS;
+  const { timeoutMs: customTimeout, signal: userSignal, ...rest } = init ?? {};
+  const timeoutMs = customTimeout ?? FETCH_WITH_TIMEOUT_MS;
   const timeoutController = new AbortController();
   let didTimeout = false;
 
@@ -19,7 +22,6 @@ export async function fetchWithTimeout(
     timeoutController.abort();
   }, timeoutMs);
 
-  const { signal: userSignal, ...rest } = init ?? {};
   const combined = new AbortController();
 
   const abortCombined = () => {
@@ -37,10 +39,7 @@ export async function fetchWithTimeout(
   }
 
   try {
-    const response = await fetch(input, {
-      ...rest,
-      signal: combined.signal,
-    });
+    const response = await fetch(input, { ...rest, signal: combined.signal });
     return response;
   } catch (err) {
     if (didTimeout) {

@@ -21,6 +21,7 @@ import {
 import { Play, RotateCcw, ShieldAlert, Zap, TrendingUp, TrendingDown, Info, AlertCircle } from 'lucide-react';
 import { useToast } from '../providers/ToastProvider';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
 
 export default function BiasSandbox() {
@@ -66,7 +67,7 @@ export default function BiasSandbox() {
     setIsSimulating(true);
     setSimulationMessage(null);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/simulate`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/simulate`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
@@ -127,7 +128,7 @@ export default function BiasSandbox() {
     if (!jobId) return;
     setIsOptimizing(true);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/optimize`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/optimize`), {
         method: 'POST'
       });
       const data = await res.json();
@@ -150,7 +151,7 @@ export default function BiasSandbox() {
   const fetchRecommendation = useCallback(async () => {
     if (!jobId) return;
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/recommendation`);
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/recommendation`));
       const data = await res.json();
       if (res.ok) setRecommendation(data);
     } catch (e) {

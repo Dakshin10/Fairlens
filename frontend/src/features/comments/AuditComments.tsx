@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, CheckCircle, Send, Plus, X, Clock } from 'lucide-react';
 import { apiFetch } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { AuditEmptyState } from '../../components/ui/AuditEmptyState';
 
 interface Comment {
@@ -36,7 +37,7 @@ export default function AuditComments({ jobId }: { jobId: string }) {
   const fetchThreads = async () => {
     setThreadsError(false);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/threads`);
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/threads`));
       if (!res.ok) {
         setThreads([]);
         setThreadsError(true);
@@ -60,7 +61,7 @@ export default function AuditComments({ jobId }: { jobId: string }) {
     if (!newThreadTitle.trim()) return;
     try {
       setLoading(true);
-      await apiFetch(`http://localhost:8000/audits/${jobId}/threads`, {
+      await apiFetch(apiUrl(`/audits/${jobId}/threads`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newThreadTitle, author: currentUser })
@@ -77,7 +78,7 @@ export default function AuditComments({ jobId }: { jobId: string }) {
 
   const fetchComments = async (threadId: string) => {
     try {
-      const res = await apiFetch(`http://localhost:8000/threads/${threadId}/comments`);
+      const res = await apiFetch(apiUrl(`/threads/${threadId}/comments`));
       const data = await res.json();
       setThreads(prev => prev.map(t => t.id === threadId ? { ...t, comments: data } : t));
     } catch (e) {
@@ -96,7 +97,7 @@ export default function AuditComments({ jobId }: { jobId: string }) {
     if (!newCommentText.trim()) return;
     try {
       setLoading(true);
-      await apiFetch(`http://localhost:8000/threads/${threadId}/comments`, {
+      await apiFetch(apiUrl(`/threads/${threadId}/comments`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: newCommentText, author: currentUser })
@@ -112,7 +113,7 @@ export default function AuditComments({ jobId }: { jobId: string }) {
 
   const handleResolveThread = async (threadId: string, resolved: boolean) => {
     try {
-      await apiFetch(`http://localhost:8000/threads/${threadId}/resolve?resolved=${resolved}`, {
+      await apiFetch(apiUrl(`/threads/${threadId}/resolve?resolved=${resolved}`), {
         method: 'PATCH'
       });
       await fetchThreads();

@@ -4,6 +4,7 @@ import { ShieldCheck, UploadCloud, AlertTriangle, Zap, Loader, Play, Wrench, Che
 import { useAuditStore } from '../../store/auditStore';
 import { useAuditProgressStore } from '../../store/auditProgressStore';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { unwrapAuditBody } from '../../utils/auditEnvelope';
 import { auth } from '../../firebase';
 import { buildAuditSummary } from '../../utils/auditSummary';
@@ -132,7 +133,7 @@ export default function Dashboard() {
     setApplyFixLoading(true);
     setApplyFixMessage(null);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/optimize`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/optimize`), {
         method: 'POST',
       });
       const data = await res.json().catch(() => ({}));
@@ -172,7 +173,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (jobId && simulation) {
-      apiFetch(`http://localhost:8000/audits/${jobId}/summary`)
+      apiFetch(apiUrl(`/audits/${jobId}/summary`))
         .then(res => {
           if (!res.ok) throw new Error("Failed to fetch summary");
           return res.json();
@@ -505,9 +506,10 @@ function DashboardEmptyState() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const uploadRes = await apiFetch('http://localhost:8000/audits/upload', {
+      const uploadRes = await apiFetch(apiUrl('/audits/upload'), {
         method: 'POST',
         body: formData,
+        timeoutMs: 120_000,
       });
       if (!uploadRes.ok) {
         throw new Error(await getApiErrorMessage(uploadRes, 'Upload failed.'));
@@ -531,7 +533,7 @@ function DashboardEmptyState() {
 
       const protectedResolved = resolveProtectedColumns([...LIVE_DEMO_PROTECTED], columns);
 
-      const configRes = await apiFetch('http://localhost:8000/audits/config', {
+      const configRes = await apiFetch(apiUrl('/audits/config'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -548,7 +550,7 @@ function DashboardEmptyState() {
         throw new Error(await getApiErrorMessage(configRes, 'Could not save audit configuration.'));
       }
 
-      const runRes = await apiFetch(`http://localhost:8000/audits/${job_id}/run`, {
+      const runRes = await apiFetch(apiUrl(`/audits/${job_id}/run`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -582,7 +584,7 @@ function DashboardEmptyState() {
       setAuditSummary(buildAuditSummary(auditData.disparities as Record<string, unknown>));
 
       try {
-        const explainRes = await apiFetch(`http://localhost:8000/audits/${job_id}/explain`, {
+        const explainRes = await apiFetch(apiUrl(`/audits/${job_id}/explain`), {
           method: 'POST',
         });
         if (explainRes.ok) {
@@ -622,7 +624,7 @@ function DashboardEmptyState() {
   useEffect(() => {
     let cancelled = false;
     setRecentLoading(true);
-    apiFetch('http://localhost:8000/audits/recent')
+    apiFetch(apiUrl('/audits/recent'))
       .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed to load recent audits')))
       .then((data) => {
         if (!cancelled) setRecentAudits(Array.isArray(data?.audits) ? data.audits : []);

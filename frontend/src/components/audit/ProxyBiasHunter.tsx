@@ -25,6 +25,7 @@ import CorrelationHeatmap from './CorrelationHeatmap';
 import ProxyRiskBarChart from './ProxyRiskBarChart';
 import ProxyNetworkGraph from './ProxyNetworkGraph';
 import { apiFetch, isRequestTimeout } from '../../utils/apiFetch';
+import { apiUrl } from '../../utils/apiBaseUrl';
 import { unwrapAuditBody } from '../../utils/auditEnvelope';
 import { AuditEmptyState } from '../ui/AuditEmptyState';
 
@@ -52,7 +53,7 @@ export default function ProxyBiasHunter() {
     setDetectionError(false);
     setIsProxyAnalyzing(true);
     try {
-      const res = await apiFetch(`http://localhost:8000/audits/${jobId}/proxy-risks`, {
+      const res = await apiFetch(apiUrl(`/audits/${jobId}/proxy-risks`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
